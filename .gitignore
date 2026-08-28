@@ -1,0 +1,45 @@
+# Virtual environments
+.venv/
+myenv/
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+interview_prep.db
+
+# Secrets and environment
+.env
+.env.*
+!.env.example
+config.yaml.bak
+config.yaml
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/

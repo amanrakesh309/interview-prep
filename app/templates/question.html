@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Question #{{ question['id'] if question else '' }}{% endblock %}
+{% block content %}
+{% if question %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between">
+        <span class="badge bg-secondary">{{ question['category'] }}</span>
+        <span class="badge {% if question['is_answered'] %}bg-success{% else %}bg-warning text-dark{% endif %}">
+            {{ 'Completed' if question['is_answered'] else 'Pending' }}
+        </span>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">Question #{{ question['id'] }}</h5>
+        <p class="card-text fs-5">{{ question['question_text'] }}</p>
+        <small class="text-muted">Added: {{ question['date_added'] }} | Source: {{ question['model_source'] }}</small>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Your Answer</h5>
+        <form method="POST">
+            <div class="mb-3">
+                <textarea name="user_answer" class="form-control" rows="6" placeholder="Type your answer here..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Answer</button>
+            <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+        </form>
+    </div>
+</div>
+
+{% if feedback %}
+<div class="card shadow-sm mb-4 border-success">
+    <div class="card-header bg-success text-white">Evaluation Result</div>
+    <div class="card-body">
+        <h5>Score: <span class="badge bg-primary">{{ feedback['score'] }}/100</span></h5>
+        <p><strong>Summary:</strong> {{ feedback['summary'] }}</p>
+        <p><strong>Feedback:</strong> {{ feedback['feedback'] }}</p>
+    </div>
+</div>
+{% endif %}
+
+{% if history and not feedback %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header">Previous Attempt</div>
+    <div class="card-body">
+        <p><strong>Your Answer:</strong> {{ history['user_answer'] }}</p>
+        <p><strong>Model Summary:</strong> {{ history['model_summary'] }}</p>
+        <p><strong>Score:</strong> <span class="badge bg-info">{{ history['score'] }}/100</span></p>
+        <p><strong>Feedback:</strong> {{ history['feedback_text'] }}</p>
+        <small class="text-muted">Submitted: {{ history['created_at'] }}</small>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="alert alert-danger">Question not found.</div>
+<a href="/" class="btn btn-secondary">Back to Dashboard</a>
+{% endif %}
+{% endblock %}

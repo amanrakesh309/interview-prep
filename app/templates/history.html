@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<h2 class="mb-4">Performance History</h2>
+
+<!-- Filter Controls: Domain & Date -->
+<div class="card p-3 shadow-sm mb-4">
+    <form method="GET" action="/history" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Domain Filter</label>
+            <select name="domain" class="form-select" onchange="this.form.submit()">
+                <option value="">All Domains</option>
+                {% for d in all_domains %}
+                <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d.replace('_',' ').title() }} ({{ d }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Date (Answered)</label>
+            <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+        </div>
+        <div class="col-md-3">
+            <div class="btn-group w-100" role="group">
+                {% if prev_date %}
+                <a href="/history?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ prev_date }}" class="btn btn-outline-secondary">← Prev Day</a>
+                {% endif %}
+                {% if next_date %}
+                <a href="/history?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ next_date }}" class="btn btn-outline-secondary">Next →</a>
+                {% endif %}
+                <a href="/history" class="btn btn-outline-dark">Clear</a>
+            </div>
+        </div>
+    </form>
+    {% if selected_domain or selected_date %}
+    <div class="mt-2">
+        <small class="text-muted">Filtered: {% if selected_domain %}Domain={{ selected_domain }} {% endif %}{% if selected_date %}Date={{ selected_date }}{% endif %} <a href="/history">Clear</a></small>
+    </div>
+    {% endif %}
+</div>
+
+{% if records %}
+<table class="table table-bordered bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Category</th>
+            <th>Question</th>
+            <th>Your Answer</th>
+            <th>Score</th>
+            <th>Feedback</th>
+            <th>Date Added</th>
+            <th>Date Answered</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in records %}
+        <tr>
+            <td><span class="badge bg-secondary">{{ r['category'] }}</span></td>
+            <td>{{ r['question_text'] }}</td>
+            <td>{{ r['user_answer'][:150] }}{% if r['user_answer']|length > 150 %}...{% endif %}</td>
+            <td><span class="badge {% if r['score'] >= 70 %}bg-success{% else %}bg-danger{% endif %}">{{ r['score'] }}/100</span></td>
+            <td>{{ r['feedback_text'][:150] }}{% if r['feedback_text']|length > 150 %}...{% endif %}</td>
+            <td><small>{{ r['date_added'] }}</small></td>
+            <td><small>{{ r['date_answered'] }}</small></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">No answered questions found for selected filters. Try clearing filters.</div>
+{% endif %}
+<a href="/" class="btn btn-link">← Back to Dashboard</a>
+{% endblock %}

@@ -1,0 +1,1 @@
+Act as a Principal Engineer at a top tech company. Generate interview questions for a {role} with {experience_years} years of experience. Tech Stack: {tech_stack}. Categories and target counts: {category_counts}. Return ONLY valid JSON array with no markdown, no extra text: [{"question": "...", "category": "..."}]

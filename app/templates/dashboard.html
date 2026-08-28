@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Interview Prep Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Daily Interview Preparation Dashboard</h2>
+    <form action="/generate" method="POST">
+        <button class="btn btn-primary">Generate Today's Questions</button>
+    </form>
+</div>
+
+<!-- Filter Controls: Domain & Date -->
+<div class="card p-3 shadow-sm mb-4">
+    <form method="GET" action="/" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Domain Filter</label>
+            <select name="domain" class="form-select" onchange="this.form.submit()">
+                <option value="">All Domains</option>
+                {% for d in all_domains %}
+                <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d.replace('_',' ').title() }} ({{ d }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+        </div>
+        <div class="col-md-3">
+            <div class="btn-group w-100" role="group">
+                {% if prev_date %}
+                <a href="/?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ prev_date }}" class="btn btn-outline-secondary">← Prev Day</a>
+                {% endif %}
+                {% if next_date %}
+                <a href="/?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ next_date }}" class="btn btn-outline-secondary">Next Day →</a>
+                {% endif %}
+                <a href="/" class="btn btn-outline-dark">Today</a>
+            </div>
+        </div>
+    </form>
+    {% if selected_domain or selected_date %}
+    <div class="mt-2">
+        <small class="text-muted">Filtered: {% if selected_domain %}Domain={{ selected_domain }} {% endif %}{% if selected_date %}Date={{ selected_date }}{% endif %} <a href="/">Clear</a></small>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Daily Progress Cards -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card p-3 shadow-sm">
+            <h5>Today's Average Score</h5>
+            <h3 class="text-success">{{ "%.1f"|format(stats['avg_score']) if stats['avg_score'] else 'N/A' }} / 100</h3>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 shadow-sm">
+            <h5>Answered Today</h5>
+            <h3>{{ stats['total_answered'] or 0 }} Questions</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Questions Table -->
+<h4>Questions {% if selected_domain %}({{ selected_domain }}){% endif %} {% if selected_date %}on {{ selected_date }}{% else %}Today{% endif %}</h4>
+<table class="table table-bordered bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Status</th>
+            <th>Category</th>
+            <th>Question</th>
+            <th>Date Added</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for q in questions %}
+        <tr>
+            <td>
+                {% if q['is_answered'] %}
+                <span class="badge bg-success">Completed</span>
+                {% else %}
+                <span class="badge bg-warning text-dark">Pending</span>
+                {% endif %}
+            </td>
+            <td><span class="badge bg-secondary">{{ q['category'] }}</span></td>
+            <td>{{ q['question_text'] }}</td>
+            <td><small>{{ q['date_added'] }}</small></td>
+            <td>
+                <a href="/question/{{ q['id'] }}" class="btn btn-sm btn-outline-primary">Attempt / View</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">No questions found for selected filters. Try clearing filters or generate.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="/history{% if selected_domain %}?domain={{ selected_domain }}{% endif %}" class="btn btn-link">View Full History & Past Feedback →</a>
+{% endblock %}

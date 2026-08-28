@@ -1,0 +1,69 @@
+# =============================================================================
+# Interview Prep App - Dummy/Example Configuration
+# Copy this file to config.yaml and replace placeholder values with your own
+#   cp config.example.yaml config.yaml
+# Never commit real API keys - use placeholders or env vars (WEB_SECRET_KEY)
+# =============================================================================
+
+# Database Configuration
+database:
+  path: "./interview_prep.db"  # or absolute path /path/to/interview_prep.db
+
+# LLM Configuration
+llm:
+  # Choose provider: "cloud" (Agnes/Mistral/OpenAI-compatible) or "local" (Ollama)
+  type: "cloud"
+
+  # Cloud Configuration - OpenAI-compatible chat completions API
+  cloud:
+    # Example endpoints - replace with your provider:
+    # Agnes AI: https://apihub.agnes-ai.com/v1/chat/completions
+    # Mistral:  https://api.mistral.ai/v1/chat/completions
+    # OpenAI:   https://api.openai.com/v1/chat/completions
+    api_url: "https://apihub.agnes-ai.com/v1/chat/completions"
+    api_key: "YOUR_AGNES_API_KEY"  # or YOUR_MISTRAL_API_KEY / YOUR_OPENAI_API_KEY
+    model: "agnes-2.0-flash"       # e.g., mistral-medium, gpt-4o, llama3.2:latest
+
+  # Local Configuration - Ollama (https://ollama.com)
+  local:
+    base_url: "http://127.0.0.1:11434"  # Ollama default; use http://localhost:11434 if needed
+    model: "gemma3:1b"                  # run: ollama pull gemma3:1b  (or llama3.2:latest, qwen2.5-coder:1.5b)
+    temperature: 0.3                    # 0.0-1.0, lower = more deterministic JSON
+    max_tokens: 1500                    # increase to 2000+ if generating 10+ questions truncates
+    stream: true                        # true = streaming via iter_lines (as in app/test.py), false = single JSON
+
+# User Profile Configuration
+profile:
+  role: "SDE 2"                         # used as {role} in prompt templates
+  experience_years: 6                   # used as {experience_years}
+  tech_stack:                           # used as {tech_stack} = comma-joined string
+    - "Java"
+    - "Spring Boot"
+    - "Microservices"
+    - "AWS"
+    - "Sql Databases"
+    - "NoSQL Databases"
+
+# Question Planning Configuration
+questions:
+  daily_target: 10                      # total questions per generate
+  domains:                              # interview domains (WHAT you test) - distinct from tech_stack (WHAT you know)
+    system_design: "High"               # weights: High=3, Medium=2, Low=1 or integer 1-10
+    core_java: "High"                   # use core_java not java to avoid overlap with tech_stack Java
+    debugging: "Medium"
+    outage_handling: "Low"
+  recent_context_limit: 15              # number of recent question hashes passed to LLM to avoid repeats
+
+# Prompt Templates Configuration
+prompts:
+  active_generation: "faang_style"      # file: app/prompts/generation/faang_style.txt
+  active_evaluation: "strict_grading"   # file: app/prompts/evaluation/strict_grading.txt
+  # Alternatives: generation/conceptual_warmup.txt, evaluation/encouraging.txt
+
+# Web UI Configuration
+web:
+  host: "127.0.0.1"                      # use 0.0.0.0 to expose on network
+  port: 5000
+  debug: false                          # true only for development
+  secret_key: "YOUR_WEB_SECRET_KEY_CHANGE_ME"  # DUMMY - generate: python -c "import secrets; print(secrets.token_hex(32))"
+  history_limit: 100                    # max rows for /history query

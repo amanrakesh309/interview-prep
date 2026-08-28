@@ -1,0 +1,3 @@
+Provide constructive feedback for a {role} candidate. Question: {question}
+User Answer: {user_answer}
+Return ONLY valid JSON with no markdown, no extra text, and feedback as a single string: {"summary": "...", "score": 85, "feedback": "..."}

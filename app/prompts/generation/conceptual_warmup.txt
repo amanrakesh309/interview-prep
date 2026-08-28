@@ -1,0 +1,1 @@
+Generate foundational interview questions for a {role}. Tech Stack: {tech_stack}. Categories and target counts: {category_counts}. Return ONLY valid JSON array with no markdown, no extra text: [{"question": "...", "category": "..."}]
