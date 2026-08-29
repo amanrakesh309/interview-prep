@@ -205,8 +205,12 @@ def fetch_questions(
     counts: Dict[str, int],
     config: Dict[str, Any] = None,
     recent_topics: List[str] = None,
+    topic_keyword: str = "",
 ) -> List[Dict[str, str]]:
-    """Fetch structured interview questions using dynamic prompt templates."""
+    """Fetch structured interview questions using dynamic prompt templates.
+
+    Supports topic_keyword injection for targeted generation.
+    """
     prompt = None
     try:
         if config is None:
@@ -250,6 +254,15 @@ def fetch_questions(
             if ctx_topics:
                 recent_str = "\n".join(f"- {t[:150]}" for t in ctx_topics[:12])
                 prompt += f"\n\nAvoid repeating these existing questions/topics (generate distinct new ones):\n{recent_str}"
+            # Inject targeted topic keyword if provided (on-demand generation)
+            if topic_keyword and str(topic_keyword).strip():
+                tk = str(topic_keyword).strip()
+                dom = categories[0] if categories else "general"
+                prompt += (
+                    f"\n\nFocus specifically on the sub-topic/keyword: \"{tk}\" "
+                    f"within domain \"{dom}\". Ensure all {counts.get(dom, 1)} "
+                    f"questions are highly targeted to {tk} and belong to category \"{dom}\"."
+                )
     except Exception as exc:
         print(f"Warning: dynamic prompt loading failed ({exc}), falling back to hardcoded prompt.")
         prompt = None
@@ -263,6 +276,10 @@ def fetch_questions(
         if recent_topics:
             recent_str = "\n".join(f"- {t[:150]}" for t in recent_topics[:12])
             prompt += f"\nAvoid these: {recent_str}"
+        if topic_keyword and str(topic_keyword).strip():
+            tk = str(topic_keyword).strip()
+            dom = categories[0] if categories else "general"
+            prompt += f"\nFocus specifically on topic \"{tk}\" in domain \"{dom}\"."
 
     try:
         raw = query_llm(llm_config, prompt)

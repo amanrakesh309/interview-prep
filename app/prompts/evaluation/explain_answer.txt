@@ -1,0 +1,8 @@
+You are a Principal Engineer mentoring a {role} with {experience_years} years of experience (Tech Stack: {tech_stack}) for an interview on {category}.
+
+Question: {question}
+
+Provide a structured, high-quality sample answer tailored to this candidate level. Focus on depth appropriate for {experience_years} years.
+
+Return ONLY valid JSON with no markdown, no extra text, no smart quotes:
+{"model_answer": "A structured, high-quality sample answer (2-4 paragraphs, include examples and trade-offs tailored to {role} level)...", "key_points_to_mention": ["Bullet point 1 of mandatory details a {role} with {experience_years} years should hit", "Bullet point 2", "Bullet point 3"], "interviewer_mindset": "What the interviewer evaluates in this question (e.g., depth, trade-offs, edge cases) and why it matters for {role}..."}

@@ -3,16 +3,24 @@
 {% block content %}
 <h2 class="mb-4">Performance History</h2>
 
-<!-- Filter Controls: Domain & Date -->
+<!-- Filter Controls: Domain, Date, Status -->
 <div class="card p-3 shadow-sm mb-4">
     <form method="GET" action="/history" class="row g-3 align-items-end">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Domain Filter</label>
-            <select name="domain" class="form-select" onchange="this.form.submit()">
+            <select name="domain" class="form-select">
                 <option value="">All Domains</option>
                 {% for d in all_domains %}
                 <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d.replace('_',' ').title() }} ({{ d }})</option>
                 {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
             </select>
         </div>
         <div class="col-md-3">
@@ -22,21 +30,21 @@
         <div class="col-md-2">
             <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
         </div>
-        <div class="col-md-3">
-            <div class="btn-group w-100" role="group">
-                {% if prev_date %}
-                <a href="/history?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ prev_date }}" class="btn btn-outline-secondary">← Prev Day</a>
-                {% endif %}
-                {% if next_date %}
-                <a href="/history?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ next_date }}" class="btn btn-outline-secondary">Next →</a>
-                {% endif %}
-                <a href="/history" class="btn btn-outline-dark">Clear</a>
-            </div>
+        <div class="col-md-1">
+            <a href="/history" class="btn btn-outline-dark w-100">Clear</a>
         </div>
     </form>
-    {% if selected_domain or selected_date %}
+    <div class="mt-2 d-flex gap-2">
+        {% if prev_date %}
+        <a href="/history?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}{% if selected_status != 'all' %}status={{ selected_status }}&{% endif %}date={{ prev_date }}" class="btn btn-outline-secondary btn-sm">← Prev Day</a>
+        {% endif %}
+        {% if next_date %}
+        <a href="/history?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}{% if selected_status != 'all' %}status={{ selected_status }}&{% endif %}date={{ next_date }}" class="btn btn-outline-secondary btn-sm">Next →</a>
+        {% endif %}
+    </div>
+    {% if selected_domain or selected_status != 'all' or selected_date %}
     <div class="mt-2">
-        <small class="text-muted">Filtered: {% if selected_domain %}Domain={{ selected_domain }} {% endif %}{% if selected_date %}Date={{ selected_date }}{% endif %} <a href="/history">Clear</a></small>
+        <small class="text-muted">Filtered: {% if selected_domain %}Domain={{ selected_domain }} {% endif %}{% if selected_status != 'all' %}Status={{ selected_status }} {% endif %}{% if selected_date %}Date={{ selected_date }}{% endif %}</small>
     </div>
     {% endif %}
 </div>
@@ -69,7 +77,7 @@
     </tbody>
 </table>
 {% else %}
-<div class="alert alert-info">No answered questions found for selected filters. Try clearing filters.</div>
+<div class="alert alert-info">No records found for selected filters. Try clearing filters. Status={{ selected_status }}, Domain={{ selected_domain or 'All' }}, Date={{ selected_date or 'All' }}</div>
 {% endif %}
 <a href="/" class="btn btn-link">← Back to Dashboard</a>
 {% endblock %}

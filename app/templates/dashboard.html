@@ -1,49 +1,113 @@
 {% extends "base.html" %}
 {% block title %}Interview Prep Dashboard{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Daily Interview Preparation Dashboard</h2>
-    <form action="/generate" method="POST">
-        <button class="btn btn-primary">Generate Today's Questions</button>
-    </form>
+<!-- Unified Header Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border">
+    <div>
+        <h2 class="mb-0">Daily Interview Preparation</h2>
+        <small class="text-muted">Track progress, filter, and generate practice</small>
+    </div>
+    <div class="d-flex gap-2">
+        <form action="/generate" method="POST" class="m-0">
+            <button class="btn btn-primary fw-semibold px-4">Generate Today's Questions</button>
+        </form>
+        <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#targetedModal">
+            Targeted Practice (+)
+        </button>
+    </div>
 </div>
 
-<!-- Filter Controls: Domain & Date -->
-<div class="card p-3 shadow-sm mb-4">
-    <form method="GET" action="/" class="row g-3 align-items-end">
-        <div class="col-md-4">
-            <label class="form-label">Domain Filter</label>
-            <select name="domain" class="form-select" onchange="this.form.submit()">
+<!-- Targeted Practice Modal (clean dialog, replaces standalone card) -->
+<div class="modal fade" id="targetedModal" tabindex="-1" aria-labelledby="targetedModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="targetedModalLabel">Generate Targeted Practice Questions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="/generate_custom">
+          <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Domain</label>
+                <input list="domainOptions" name="domain" class="form-control" placeholder="e.g., system_design, core_java or custom" required>
+                <datalist id="domainOptions">
+                    {% for d in all_domains %}
+                    <option value="{{ d }}">
+                    {% endfor %}
+                    <option value="system_design">
+                    <option value="core_java">
+                    <option value="debugging">
+                    <option value="outage_handling">
+                </datalist>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Topic Keyword</label>
+                <input type="text" name="topic_keyword" class="form-control" placeholder="e.g., Kafka, Garbage Collection, SQL Indexing" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Count</label>
+                <input type="number" name="count" class="form-control" value="2" min="1" max="10" required>
+            </div>
+            <small class="text-muted">Uses hash deduplication and topic-injected prompts.</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">Generate Targeted</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Unified Filter Strip (directly above table) -->
+<div class="card p-3 shadow-sm mb-3">
+    <form method="GET" action="/" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label mb-1">Domain</label>
+            <select name="domain" class="form-select form-select-sm">
                 <option value="">All Domains</option>
                 {% for d in all_domains %}
-                <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d.replace('_',' ').title() }} ({{ d }})</option>
+                <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d.replace('_',' ').title() }}</option>
                 {% endfor %}
             </select>
         </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
         <div class="col-md-3">
-            <label class="form-label">Date</label>
-            <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+            <label class="form-label mb-1">Date</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date }}">
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+            <button type="submit" class="btn btn-outline-primary btn-sm w-100">Apply Filters</button>
         </div>
-        <div class="col-md-3">
-            <div class="btn-group w-100" role="group">
-                {% if prev_date %}
-                <a href="/?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ prev_date }}" class="btn btn-outline-secondary">← Prev Day</a>
-                {% endif %}
-                {% if next_date %}
-                <a href="/?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}date={{ next_date }}" class="btn btn-outline-secondary">Next Day →</a>
-                {% endif %}
-                <a href="/" class="btn btn-outline-dark">Today</a>
-            </div>
+        <div class="col-md-2">
+            <a href="/" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
         </div>
     </form>
-    {% if selected_domain or selected_date %}
-    <div class="mt-2">
-        <small class="text-muted">Filtered: {% if selected_domain %}Domain={{ selected_domain }} {% endif %}{% if selected_date %}Date={{ selected_date }}{% endif %} <a href="/">Clear</a></small>
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <small class="text-muted">
+            {% if selected_domain or selected_status != 'all' %}
+                Filtered: {% if selected_domain %}{{ selected_domain }} {% endif %}{{ selected_status }} {% if selected_date %}· {{ selected_date }}{% endif %}
+            {% else %}
+                Showing {{ selected_date }} · {{ selected_status }}
+            {% endif %}
+        </small>
+        <div class="btn-group btn-group-sm" role="group">
+            {% if prev_date %}
+            <a href="/?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}{% if selected_status != 'all' %}status={{ selected_status }}&{% endif %}date={{ prev_date }}" class="btn btn-outline-secondary">← Prev Day</a>
+            {% endif %}
+            <a href="/" class="btn btn-outline-dark">Today</a>
+            {% if next_date %}
+            <a href="/?{% if selected_domain %}domain={{ selected_domain }}&{% endif %}{% if selected_status != 'all' %}status={{ selected_status }}&{% endif %}date={{ next_date }}" class="btn btn-outline-secondary">Next Day →</a>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
 </div>
 
 <!-- Daily Progress Cards -->
@@ -63,7 +127,7 @@
 </div>
 
 <!-- Questions Table -->
-<h4>Questions {% if selected_domain %}({{ selected_domain }}){% endif %} {% if selected_date %}on {{ selected_date }}{% else %}Today{% endif %}</h4>
+<h4 class="mb-2">Questions {% if selected_domain %}({{ selected_domain }}){% endif %} {% if selected_status != 'all' %} [{{ selected_status }}]{% endif %} {% if selected_date %}on {{ selected_date }}{% else %}Today{% endif %}</h4>
 <table class="table table-bordered bg-white shadow-sm">
     <thead class="table-dark">
         <tr>

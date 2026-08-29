@@ -12,22 +12,106 @@
     <div class="card-body">
         <h5 class="card-title">Question #{{ question['id'] }}</h5>
         <p class="card-text fs-5">{{ question['question_text'] }}</p>
-        <small class="text-muted">Added: {{ question['date_added'] }} | Source: {{ question['model_source'] }}</small>
+        <small class="text-muted">Added: {{ question['date_added'] }} | Source: {{ question['model_source'] }} | Category: {{ question['category'] }}</small>
     </div>
 </div>
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <h5>Your Answer</h5>
-        <form method="POST">
+        <form method="POST" id="answerForm">
             <div class="mb-3">
                 <textarea name="user_answer" class="form-control" rows="6" placeholder="Type your answer here..." required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Submit Answer</button>
-            <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Submit Answer</button>
+                <button type="button" id="explainBtn" class="btn btn-outline-warning" data-qid="{{ question['id'] }}">I Don't Know — Show Answer</button>
+                <a href="/" class="btn btn-secondary ms-auto">Back to Dashboard</a>
+            </div>
         </form>
     </div>
 </div>
+
+<!-- Guidance Drawer / Panel (hidden until fetched) -->
+<div id="guidanceDrawer" class="card shadow-sm mb-4 border-info" style="display:none;">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <span>Guidance: Model Answer & Interviewer Mindset</span>
+        <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('guidanceDrawer').style.display='none'"></button>
+    </div>
+    <div class="card-body">
+        <div id="guidanceLoading" class="text-center" style="display:none;">
+            <div class="spinner-border text-info" role="status"><span class="visually-hidden">Loading...</span></div>
+            <p class="mt-2 text-muted">Fetching guidance from model...</p>
+        </div>
+        <div id="guidanceContent" style="display:none;">
+            <h6>Model Answer</h6>
+            <p id="guidanceAnswer" class="bg-light p-3 rounded" style="white-space: pre-wrap;"></p>
+            <h6>Key Points to Mention ({{ question['category'] }})</h6>
+            <ul id="guidancePoints" class="list-group list-group-flush mb-3"></ul>
+            <h6>Interviewer Mindset</h6>
+            <p id="guidanceMindset" class="fst-italic bg-light p-3 rounded"></p>
+        </div>
+        <div id="guidanceError" class="alert alert-danger" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('explainBtn').addEventListener('click', async function() {
+    const qid = this.dataset.qid;
+    const drawer = document.getElementById('guidanceDrawer');
+    const loading = document.getElementById('guidanceLoading');
+    const content = document.getElementById('guidanceContent');
+    const errorDiv = document.getElementById('guidanceError');
+    const answerEl = document.getElementById('guidanceAnswer');
+    const pointsEl = document.getElementById('guidancePoints');
+    const mindsetEl = document.getElementById('guidanceMindset');
+
+    drawer.style.display = 'block';
+    loading.style.display = 'block';
+    content.style.display = 'none';
+    errorDiv.style.display = 'none';
+    drawer.scrollIntoView({behavior: 'smooth'});
+
+    try {
+        const resp = await fetch(`/question/${qid}/explain`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.error || 'Failed to fetch guidance');
+        }
+        const data = await resp.json();
+        loading.style.display = 'none';
+
+        answerEl.textContent = data.model_answer || 'No model answer returned.';
+        pointsEl.innerHTML = '';
+        const points = data.key_points_to_mention || [];
+        if (Array.isArray(points) && points.length) {
+            points.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = '• ' + p;
+                pointsEl.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.className = 'list-group-item text-muted';
+            li.textContent = 'No key points returned.';
+            pointsEl.appendChild(li);
+        }
+        mindsetEl.textContent = data.interviewer_mindset || 'No mindset returned.';
+        content.style.display = 'block';
+    } catch (e) {
+        loading.style.display = 'none';
+        errorDiv.textContent = 'Error: ' + e.message;
+        errorDiv.style.display = 'block';
+    }
+});
+</script>
 
 {% if feedback %}
 <div class="card shadow-sm mb-4 border-success">
